@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  nim           String?   @unique  // Student ID number
+  email         String    @unique
+  name          String
+  image         String?
+  role          Role      @default(STUDENT)
+  department    String?   // e.g., "Teknik Elektro"
+  faculty       String?   // e.g., "FTEIC"
+  major         String?   // e.g., "S1 Teknik Elektro"
+  semester      Int?      @default(1)
+  gpa           Float?    @default(0)
+  entryYear     Int?      @map("entry_year")
+  phone         String?
+  bio           String?
+
+  // Parsed profile data
+  skills       String[] @default([])
+  interests    String[] @default([])
+  achievements String[] @default([])
+  languages    String[] @default([])
+
+  // CV data
+  cvUrl      String?   @map("cv_url")
+  cvParsedAt DateTime? @map("cv_parsed_at")
+  cvRawText  String?   @map("cv_raw_text")
+
+  profileCompleted Boolean @default(false) @map("profile_completed")
+
+  // Relations
+  experiences Experience[]
+  applications Application[]
+  matches      StudentMatch[]
+  managedOrgs  OrganizationAdmin[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+  SUPER_ADMIN
+}
+
+model Experience {
+  id           String  @id @default(cuid())
+  userId       String  @map("user_id")
+  title        String
+  organization String
+  duration     String
+  description  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("experiences")
+}
+
+model Organization {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  type        OrgType
+  description String?
+  logo        String?
+  faculty     String? // null = university-wide
+  department  String? // null = faculty-wide or university-wide
+  website     String?
+  instagram   String?
+
+  // Relations
+  opportunities Opportunity[]
+  admins        OrganizationAdmin[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("organizations")
+}
+
+enum OrgType {
+  BEM      // Badan Eksekutif Mahasiswa
+  HIMA     // Himpunan Mahasiswa (HMD)
+  UKM      // Unit Kegiatan Mahasiswa
+  DITMAWA  // Direktorat Kemahasiswaan
+  LAB      // Research Lab
+  EXTERNAL // External partner
+}
+
+model OrganizationAdmin {
+  id             String @id @default(cuid())
+  userId         String @map("user_id")
+  organizationId String @map("organization_id")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("organization_admins")
+}
+
+model Opportunity {
+  id             String            @id @default(cuid())
+  title          String
+  slug           String            @unique
+  description    String
+  category       OpportunityCategory
+  status         OpportunityStatus @default(DRAFT)
+  organizationId String            @map("organization_id")
+
+  // Timeline
+  applicationStart DateTime? @map("application_start")
+  applicationEnd   DateTime? @map("application_end")
+  announcementDate DateTime? @map("announcement_date")
+
+  // Capacity
+  quota Int?
+
+  // Requirements (hard criteria)
+  minGpa           Float?   @map("min_gpa")
+  maxGpa           Float?   @map("max_gpa")
+  minSemester      Int?     @map("min_semester")
+  maxSemester      Int?     @map("max_semester")
+  allowedMajors    String[] @default([]) @map("allowed_majors")
+  allowedFaculties String[] @default([]) @map("allowed_faculties")
+  requiredSkills   String[] @default([]) @map("required_skills")
+  requiredDocs     String[] @default([]) @map("required_docs")
+
+  // Additional info
+  benefits     String[] @default([])
+  contactEmail String?  @map("contact_email")
+  externalLink String?  @map("external_link")
+  coverImage   String?  @map("cover_image")
+
+  // Tags for semantic matching
+  tags String[] @default([])
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id])
+  applications Application[]
+  matches      StudentMatch[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("opportunities")
+}
+
+enum OpportunityCategory {
+  SCHOLARSHIP
+  ORGANIZATION
+  COMPETITION
+  COMMITTEE
+  UKM
+  RESEARCH
+}
+
+enum OpportunityStatus {
+  DRAFT
+  UPCOMING
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+model StudentMatch {
+  id            String @id @default(cuid())
+  userId        String @map("user_id")
+  opportunityId String @map("opportunity_id")
+
+  score  Float       // 0-100 match percentage
+  status MatchStatus
+
+  matchedCriteria String[] @default([]) @map("matched_criteria")
+  gapAnalysis     Json?    @map("gap_analysis") // Array of GapItem
+  recommendation  String?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  computedAt DateTime @default(now()) @map("computed_at")
+
+  @@unique([userId, opportunityId])
+  @@map("student_matches")
+}
+
+enum MatchStatus {
+  ELIGIBLE
+  PARTIAL
+  INELIGIBLE
+}
+
+model Application {
+  id            String @id @default(cuid())
+  userId        String @map("user_id")
+  opportunityId String @map("opportunity_id")
+
+  status      ApplicationStatus @default(SUBMITTED)
+  coverLetter String?           @map("cover_letter")
+  documents   String[]          @default([])
+  notes       String?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  submittedAt DateTime  @default(now()) @map("submitted_at")
+  reviewedAt  DateTime? @map("reviewed_at")
+
+  @@unique([userId, opportunityId])
+  @@map("applications")
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
