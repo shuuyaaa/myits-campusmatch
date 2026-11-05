@@ -50,8 +50,8 @@ const profileNavItems: NavItem[] = [
 ];
 
 const adminNavItems: NavItem[] = [
-  { title: "Manage Opportunities", href: "/admin/opportunities", icon: Settings },
-  { title: "Review Applicants", href: "/admin/applicants", icon: Users },
+  { title: "Buka Lowongan Oprec", href: "/admin/opportunities", icon: Settings },
+  { title: "Spreadsheet Pendaftar", href: "/admin/applicants", icon: Users },
 ];
 
 // User info type
@@ -88,7 +88,7 @@ function NavLink({
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent",
         isActive
-          ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground"
+          ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground font-semibold"
           : "text-muted-foreground hover:text-foreground",
         collapsed && "justify-center px-2"
       )}
@@ -130,7 +130,7 @@ function SectionLabel({
 
 export function Sidebar({
   role = "STUDENT",
-  user = { name: "Student User", role: "Student", initials: "SU" },
+  user = { name: "Praditya Haekal Islami Al Haqiqi", role: "Mahasiswa S1 Teknik Elektro", initials: "PH" },
   collapsed = false,
   onCollapsedChange,
   onLogout,
@@ -195,12 +195,15 @@ export function Sidebar({
           <nav className="flex flex-col gap-6 px-3">
             {/* Main section */}
             <div className="flex flex-col gap-1">
-              <SectionLabel label="Main" collapsed={collapsed} />
+              <SectionLabel label="Navigasi Utama" collapsed={collapsed} />
               {mainNavItems.map((item) => (
                 <NavLink
                   key={item.href}
                   item={item}
-                  isActive={pathname === item.href}
+                  isActive={
+                    pathname === item.href ||
+                    (item.href === "/dashboard" && pathname === "/")
+                  }
                   collapsed={collapsed}
                 />
               ))}
@@ -208,7 +211,7 @@ export function Sidebar({
 
             {/* Profile section */}
             <div className="flex flex-col gap-1">
-              <SectionLabel label="Profile" collapsed={collapsed} />
+              <SectionLabel label="Profil & Berkas" collapsed={collapsed} />
               {profileNavItems.map((item) => (
                 <NavLink
                   key={item.href}
@@ -219,20 +222,18 @@ export function Sidebar({
               ))}
             </div>
 
-            {/* Admin section - only shown for ADMIN role */}
-            {role === "ADMIN" && (
-              <div className="flex flex-col gap-1">
-                <SectionLabel label="Admin" collapsed={collapsed} />
-                {adminNavItems.map((item) => (
-                  <NavLink
-                    key={item.href}
-                    item={item}
-                    isActive={pathname === item.href}
-                    collapsed={collapsed}
-                  />
-                ))}
-              </div>
-            )}
+            {/* Kelola Lowongan Oprec Section */}
+            <div className="flex flex-col gap-1">
+              <SectionLabel label="Kelola Lowongan Oprec" collapsed={collapsed} />
+              {adminNavItems.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  isActive={pathname === item.href}
+                  collapsed={collapsed}
+                />
+              ))}
+            </div>
           </nav>
         </ScrollArea>
 
@@ -248,7 +249,7 @@ export function Sidebar({
             <Avatar className="h-8 w-8 shrink-0">
               <AvatarImage src={user.avatarUrl} alt={user.name} />
               <AvatarFallback className="bg-primary/20 text-xs font-semibold text-primary dark:text-blue-400">
-                {user.initials || user.name.charAt(0).toUpperCase()}
+                {user.initials || "PH"}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
