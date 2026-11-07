@@ -97,7 +97,7 @@ function GapAnalysisContent() {
         onCollapsedChange={setCollapsed}
         user={{
           name: profile?.name || "Praditya Haekal Islami Al Haqiqi",
-          role: `${profile?.major || "S1 Teknik Elektro"} (Sem. ${profile?.semester || 5})`,
+          role: profile?.department || "Departemen Teknik Elektro",
           initials: "PH",
         }}
       />

@@ -10,8 +10,7 @@ import {
   TrendingUp,
   User,
   FileText,
-  Settings,
-  Users,
+  Send,
   LogOut,
   ChevronLeft,
   GraduationCap,
@@ -49,9 +48,8 @@ const profileNavItems: NavItem[] = [
   { title: "CV Upload", href: "/cv-upload", icon: FileText },
 ];
 
-const adminNavItems: NavItem[] = [
-  { title: "Buka Lowongan Oprec", href: "/admin/opportunities", icon: Settings },
-  { title: "Spreadsheet Pendaftar", href: "/admin/applicants", icon: Users },
+const organizerNavItems: NavItem[] = [
+  { title: "Bagikan Info Peluang", href: "/admin/opportunities", icon: Send },
 ];
 
 // User info type
@@ -130,7 +128,7 @@ function SectionLabel({
 
 export function Sidebar({
   role = "STUDENT",
-  user = { name: "Praditya Haekal Islami Al Haqiqi", role: "Mahasiswa S1 Teknik Elektro", initials: "PH" },
+  user = { name: "Praditya Haekal Islami Al Haqiqi", role: "Departemen Teknik Elektro", initials: "PH" },
   collapsed = false,
   onCollapsedChange,
   onLogout,
@@ -142,7 +140,7 @@ export function Sidebar({
     <TooltipProvider>
       <aside
         className={cn(
-          "relative flex h-screen flex-col border-r bg-card transition-all duration-300",
+          "sticky top-0 z-40 flex h-screen shrink-0 flex-col border-r border-slate-200 bg-white dark:bg-slate-900 transition-all duration-300",
           collapsed ? "w-[68px]" : "w-[260px]",
           className
         )}
@@ -222,10 +220,10 @@ export function Sidebar({
               ))}
             </div>
 
-            {/* Kelola Lowongan Oprec Section */}
+            {/* Bagikan Info Peluang Section */}
             <div className="flex flex-col gap-1">
-              <SectionLabel label="Kelola Lowongan Oprec" collapsed={collapsed} />
-              {adminNavItems.map((item) => (
+              <SectionLabel label="Publikasi Terbuka" collapsed={collapsed} />
+              {organizerNavItems.map((item) => (
                 <NavLink
                   key={item.href}
                   item={item}
@@ -237,27 +235,26 @@ export function Sidebar({
           </nav>
         </ScrollArea>
 
-        {/* User info at bottom */}
-        <div className="border-t p-3">
-          <Separator className="mb-3 hidden" />
+        {/* User info at bottom - Menempel kokoh di dasar sidebar (mentok bawah) */}
+        <div className="mt-auto shrink-0 border-t border-slate-200 bg-white dark:bg-slate-900 p-3">
           <div
             className={cn(
-              "flex items-center gap-3",
-              collapsed && "justify-center"
+              "flex items-center gap-2.5 rounded-xl p-1.5 transition-colors",
+              collapsed ? "justify-center" : "bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800"
             )}
           >
-            <Avatar className="h-8 w-8 shrink-0">
+            <Avatar className="h-8 w-8 shrink-0 border border-blue-200">
               <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback className="bg-primary/20 text-xs font-semibold text-primary dark:text-blue-400">
+              <AvatarFallback className="bg-blue-600 text-xs font-bold text-white">
                 {user.initials || "PH"}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
-              <div className="flex flex-1 flex-col overflow-hidden">
-                <span className="truncate text-sm font-medium">
+              <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+                <span className="truncate text-xs font-bold text-slate-900 dark:text-white">
                   {user.name}
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-[10px] text-slate-500 font-medium">
                   {user.role}
                 </span>
               </div>
@@ -268,10 +265,10 @@ export function Sidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7 shrink-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
                     onClick={onLogout}
                   >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut className="h-3.5 w-3.5" />
                     <span className="sr-only">Logout</span>
                   </Button>
                 </TooltipTrigger>

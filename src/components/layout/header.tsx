@@ -52,6 +52,8 @@ interface HeaderProps {
   searchQuery?: string;
   /** Placeholder for search */
   searchPlaceholder?: string;
+  /** Whether to show the search input (defaults to true) */
+  showSearch?: boolean;
   className?: string;
 }
 
@@ -68,6 +70,7 @@ export function Header({
   onSearch,
   searchQuery = "",
   searchPlaceholder = "Cari beasiswa, ormawa, keahlian, atau komite...",
+  showSearch = true,
   className,
 }: HeaderProps) {
   const router = useRouter();
@@ -124,41 +127,45 @@ export function Header({
         <h1 className="text-base font-bold text-slate-900 md:text-xl truncate">{title}</h1>
       </div>
 
-      {/* Search bar - hidden on mobile */}
-      <form onSubmit={handleSearchSubmit} className="hidden w-full max-w-md md:flex">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <Input
-            type="search"
-            value={internalQuery}
-            onChange={(e) => handleInputChange(e.target.value)}
-            placeholder={searchPlaceholder}
-            className="w-full pl-9 pr-8 bg-slate-50 border-slate-200 text-xs md:text-sm focus-visible:ring-blue-600 rounded-full"
-          />
-          {internalQuery && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      </form>
+      {/* Search bar - hidden on mobile (only when showSearch is true) */}
+      {showSearch && (
+        <form onSubmit={handleSearchSubmit} className="hidden w-full max-w-md md:flex">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Input
+              type="search"
+              value={internalQuery}
+              onChange={(e) => handleInputChange(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="w-full pl-9 pr-8 bg-slate-50 border-slate-200 text-xs md:text-sm focus-visible:ring-blue-600 rounded-full"
+            />
+            {internalQuery && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </form>
+      )}
 
       {/* Right section */}
       <div className="flex items-center gap-2">
         {/* Search button - mobile only */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden text-slate-600"
-          onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-        >
-          <Search className="h-5 w-5" />
-          <span className="sr-only">Search</span>
-        </Button>
+        {showSearch && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden text-slate-600"
+            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+          >
+            <Search className="h-5 w-5" />
+            <span className="sr-only">Search</span>
+          </Button>
+        )}
 
         {/* AI Badge Indicator */}
         <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-[11px] font-semibold text-blue-700">
@@ -209,14 +216,11 @@ export function Header({
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-9 w-9 rounded-full ring-2 ring-blue-100 hover:ring-blue-300 transition-all p-0"
+              className="relative h-9 w-9 rounded-full ring-2 ring-blue-100 hover:ring-blue-300 transition-all p-0 overflow-hidden"
             >
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={userAvatarUrl} alt={userName} />
-                <AvatarFallback className="bg-blue-600 text-xs font-bold text-white">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
+              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-xs">
+                <User className="w-4 h-4" />
+              </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-64" align="end" forceMount>
@@ -254,7 +258,7 @@ export function Header({
       </div>
 
       {/* Mobile search expanded form */}
-      {mobileSearchOpen && (
+      {showSearch && mobileSearchOpen && (
         <div className="absolute top-16 left-0 right-0 bg-white p-3 border-b border-slate-200 md:hidden z-30 shadow-md">
           <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <Input

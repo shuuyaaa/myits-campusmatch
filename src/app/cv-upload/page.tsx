@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import {
   StudentProfileData,
+  INITIAL_STUDENT_PROFILE,
   getStoredProfile,
   saveStoredProfile,
 } from "../../lib/data-store";
@@ -49,14 +50,18 @@ export default function CvUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("CV_M_Haekal_Teknik_Elektro_ITS.pdf");
   const [rawText, setRawText] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [activeStep, setActiveStep] = useState<number>(0);
   const [logs, setLogs] = useState<AIProcessingLog[]>([]);
   const [parsedData, setParsedData] = useState<any | null>(null);
   const [isSynced, setIsSynced] = useState<boolean>(false);
+  const [engineMeta, setEngineMeta] = useState<any | null>(null);
 
   const logsEndRef = useRef<HTMLDivElement>(null);
+
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
   useEffect(() => {
     setProfile(getStoredProfile());
@@ -67,10 +72,40 @@ export default function CvUploadPage() {
     logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
 
-  // Start Real-Time AI Simulation & Parsing
+  // Validasi dan seleksi berkas nyata (Wajib PDF, Max 100 MB)
+  const handleFileSelection = (selected: File) => {
+    setErrorMessage("");
+    const isPdf =
+      selected.name.toLowerCase().endsWith(".pdf") ||
+      selected.type === "application/pdf" ||
+      selected.type === "application/x-pdf";
+
+    if (!isPdf) {
+      setErrorMessage("Format berkas wajib PDF (.pdf). Mohon pilih berkas CV dengan format PDF.");
+      return;
+    }
+
+    if (selected.size > MAX_FILE_SIZE) {
+      setErrorMessage(
+        `Ukuran berkas ${(selected.size / (1024 * 1024)).toFixed(1)} MB melebihi batas maksimal yang diizinkan (100 MB).`
+      );
+      return;
+    }
+
+    setFile(selected);
+    setFileName(selected.name);
+  };
+
+  // Start Real-Time AI Scanning & Parsing Berkas Asli
   const startAIParsing = async (preset: "haekal" | "aisha" | "custom" = "haekal") => {
+    if (preset === "custom" && !file && !rawText) {
+      setErrorMessage("Silakan pilih berkas CV (PDF) Anda terlebih dahulu sebelum memulai pemindaian.");
+      return;
+    }
+
+    setErrorMessage("");
     setIsProcessing(true);
-    setProgress(5);
+    setProgress(10);
     setActiveStep(1);
     setLogs([]);
     setParsedData(null);
@@ -78,127 +113,212 @@ export default function CvUploadPage() {
 
     const targetName =
       preset === "aisha"
-        ? "CV_Aisha_Putri_Embedded_FPGA.pdf"
-        : preset === "custom" && file
-        ? file.name
-        : "CV_M_Haekal_Teknik_Elektro_ITS.pdf";
+        ? "Sampel_CV_Aisha_Robotika.pdf"
+        : preset === "haekal"
+        ? "Sampel_CV_Haekal_IoT.pdf"
+        : file?.name || "Berkas_CV_Mahasiswa.pdf";
 
     setFileName(targetName);
 
-    const logSteps: { delay: number; log: AIProcessingLog; progress: number; step: number }[] = [
+    const fileSizeStr =
+      preset === "custom" && file
+        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+        : "1.85 MB";
+
+    // 1. Log Ingesti Berkas
+    setLogs([
       {
-        delay: 300,
-        progress: 15,
-        step: 1,
-        log: {
-          time: "00:00.3",
-          stage: "INGESTION",
-          message: `[AI Core] Membaca payload dokumen: ${targetName} (MIME: application/pdf)`,
-          type: "info",
-        },
+        time: "00:00.2",
+        stage: "INGESTION",
+        message: `[PDF Ingestion] Membaca berkas: ${targetName} (${fileSizeStr}) - Format terverifikasi application/pdf`,
+        type: "info",
       },
-      {
-        delay: 800,
-        progress: 30,
-        step: 1,
-        log: {
+    ]);
+    setProgress(25);
+    setActiveStep(1);
+
+    try {
+      // 2. Log OCR & Ekstraksi Stream Dekompresi
+      await new Promise((r) => setTimeout(r, 600));
+      setProgress(50);
+      setActiveStep(2);
+      setLogs((prev) => [
+        ...prev,
+        {
           time: "00:00.8",
           stage: "OCR_PARSER",
-          message: `[OCR Engine] Mengekstrak token teks, memisahkan header, riwayat studi, dan struktur tabel...`,
+          message: `[PDF Stream Parser] Mengekstrak token teks, decoding font stream FlateDecode, tabel nilai, dan riwayat studi...`,
           type: "info",
         },
-      },
-      {
-        delay: 1500,
-        progress: 50,
-        step: 2,
-        log: {
-          time: "00:01.5",
-          stage: "ENTITY_NER",
-          message:
-            preset === "aisha"
-              ? `[Gemini NER] Entitas terdeteksi: Aisha Putri Ramadhani (NIM: 07211940000002) • S1 Teknik Elektro FTEIC ITS`
-              : `[Gemini NER] Entitas terdeteksi: M. Haekal Rizky Firmansyah (NIM: 07211940000001) • S1 Teknik Elektro FTEIC ITS`,
-          type: "success",
-        },
-      },
-      {
-        delay: 2200,
-        progress: 70,
-        step: 2,
-        log: {
-          time: "00:02.2",
-          stage: "ACADEMIC_EVAL",
-          message:
-            preset === "aisha"
-              ? `[Transkrip Detector] IPK: 3.78 • Semester: 5 • SKS: 104 • Status: Aktif FRS`
-              : `[Transkrip Detector] IPK: 3.72 • Semester: 5 • SKS: 96 • Status: Aktif FRS`,
-          type: "accent",
-        },
-      },
-      {
-        delay: 2900,
-        progress: 85,
-        step: 3,
-        log: {
-          time: "00:02.9",
-          stage: "SKILL_TAXONOMY",
-          message:
-            preset === "aisha"
-              ? `[Skill Matcher] 8 Hard skills terverifikasi: FPGA, Verilog, Embedded Systems, ROS, C++, MATLAB, Circuit Design`
-              : `[Skill Matcher] 8 Hard skills terverifikasi: Python, C++, Arduino, Embedded Systems, Machine Learning, ROS, MATLAB, IoT`,
-          type: "success",
-        },
-      },
-      {
-        delay: 3600,
-        progress: 95,
-        step: 3,
-        log: {
-          time: "00:03.6",
-          stage: "VECTOR_MATCH",
-          message: `[CampusMatch Vector Engine] Membandingkan vektor CV terhadap 10 katalog beasiswa & ormawa ITS...`,
-          type: "info",
-        },
-      },
-      {
-        delay: 4200,
-        progress: 100,
-        step: 4,
-        log: {
-          time: "00:04.2",
-          stage: "COMPLETION",
-          message: `[AI Selesai] Analisis berhasil dieksekusi dengan tingkat akurasi 96.8%. Rekomendasi siap digunakan!`,
-          type: "accent",
-        },
-      },
-    ];
+      ]);
 
-    // Play logs with timing
-    for (const item of logSteps) {
-      await new Promise((resolve) => setTimeout(resolve, item.delay));
-      setProgress(item.progress);
-      setActiveStep(item.step);
-      setLogs((prev) => [...prev, item.log]);
-    }
+      let resJson: any = null;
 
-    // Call API route
-    try {
-      const res = await fetch("/api/ai/parse-cv", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentPreset: preset,
-          fileName: targetName,
-          cvText: rawText,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setParsedData(data.data);
+      // Percobaan 1: Kirim via multipart FormData
+      try {
+        const formData = new FormData();
+        if (preset === "custom" && file) {
+          formData.append("file", file);
+        }
+        formData.append("fileName", targetName);
+        if (preset !== "custom") {
+          formData.append("studentPreset", preset);
+        }
+        if (rawText) {
+          formData.append("cvText", rawText);
+        }
+
+        const res = await fetch("/api/ai/parse-cv", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (res.ok) {
+          resJson = await res.json();
+        }
+      } catch (formDataErr) {
+        console.warn("FormData fetch hit issue, trying Base64 JSON fallback:", formDataErr);
       }
-    } catch (err) {
+
+      // Percobaan 2: Jika FormData gagal atau timeout, kirim via Base64 JSON payload
+      if (!resJson || !resJson.success) {
+        let fileBase64 = "";
+        if (preset === "custom" && file) {
+          fileBase64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+              const b64 = (reader.result as string).split(",")[1] || "";
+              resolve(b64);
+            };
+            reader.onerror = reject;
+          });
+        }
+
+        const res = await fetch("/api/ai/parse-cv", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: targetName,
+            fileBase64: fileBase64 || undefined,
+            studentPreset: preset !== "custom" ? preset : undefined,
+            cvText: rawText || "",
+          }),
+        });
+
+        if (res.ok) {
+          resJson = await res.json();
+        }
+      }
+
+      if (!resJson || !resJson.success) {
+        throw new Error(resJson?.error || "Gagal memproses berkas CV.");
+      }
+
+      const data = resJson.data;
+      setEngineMeta(resJson.meta);
+
+      // 3. Log Pengenalan Entitas Nama, IPK, & Departemen Asli
+      await new Promise((r) => setTimeout(r, 700));
+      setProgress(75);
+      setActiveStep(3);
+      setLogs((prev) => [
+        ...prev,
+        {
+          time: "00:01.8",
+          stage: "ENTITY_NER",
+          message: `[AI Extraction] Entitas terdeteksi: ${data.name && data.name !== "Tidak tertera di CV" ? data.name : "Kandidat Terdaftar"} (IPK: ${data.gpa != null ? data.gpa.toFixed(2) : "Tidak dicantumkan di CV"}) • ${data.department && data.department !== "Tidak tertera di CV" ? data.department : "Departemen Teknik Elektro"}`,
+          type: "success",
+        },
+        {
+          time: "00:02.4",
+          stage: "SKILL_TAXONOMY",
+          message: `[Skill Engine] ${data.skills?.length || 0} Keahlian terverifikasi: ${data.skills?.slice(0, 6).join(", ") || "Teknologi terpadu"}`,
+          type: "accent",
+        },
+      ]);
+
+      // 4. Log Selesai & Vector Matching
+      await new Promise((r) => setTimeout(r, 600));
+      setProgress(100);
+      setActiveStep(4);
+      setLogs((prev) => [
+        ...prev,
+        {
+          time: "00:03.0",
+          stage: "COMPLETION",
+          message: `[AI Selesai] Analisis berkas asli sukses (${resJson.meta?.engineUsed || "AI Engine"}). Rekomendasi siap digunakan!`,
+          type: "success",
+        },
+      ]);
+
+      setParsedData(data);
+
+      // Cek apakah berkas CV yang diunggah adalah milik akun Haekal sendiri atau berkas teman
+      const candidateName = data.name && data.name !== "Tidak tertera di CV" ? data.name : "Kandidat Terdeteksi";
+      const isOwnerCv = candidateName.toLowerCase().includes("haekal") || candidateName.toLowerCase().includes("praditya");
+      const isFriendCv = !isOwnerCv;
+
+      // Otomatis simpan hasil analisis CV dengan validitas 10 menit
+      // PENTING: Identitas profil akun utama pengguna (Praditya Haekal Islami Al Haqiqi) TIDAK BOLEH BERUBAH
+      const current = getStoredProfile();
+      const updated: StudentProfileData = {
+        ...current,
+        name: INITIAL_STUDENT_PROFILE.name, // Selalu Praditya Haekal Islami Al Haqiqi
+        ...(isOwnerCv ? {
+          gpa: data.gpa != null ? data.gpa : current.gpa,
+          semester: data.semester != null ? data.semester : current.semester,
+          sksCompleted: data.sks != null ? data.sks : current.sksCompleted,
+          department: data.department && data.department !== "Tidak tertera di CV" ? data.department : current.department,
+          faculty: data.faculty && data.faculty !== "Tidak tertera di CV" ? data.faculty : current.faculty,
+          skills: Array.from(new Set([...current.skills, ...(data.skills || [])])),
+          softSkills: Array.from(new Set([...current.softSkills, ...(data.softSkills || [])])),
+          interests: Array.from(new Set([...current.interests, ...(data.interests || [])])),
+          achievements: data.achievements && data.achievements.length > 0 ? data.achievements : current.achievements,
+          experiences: data.experiences && data.experiences.length > 0 ? data.experiences : current.experiences,
+        } : {}),
+        cvFileName: targetName,
+        cvParsedAt: new Date().toLocaleString("id-ID"),
+        cvParsedTimestamp: Date.now(),
+        cvParsedData: {
+          confidenceScore: data.confidenceScore || 96.8,
+          detectedSkills: data.skills || [],
+          aiSummary: data.aiSummary || "",
+        },
+        activeScannedCv: {
+          candidateName,
+          fileName: targetName,
+          department: data.department,
+          faculty: data.faculty,
+          gpa: data.gpa,
+          semester: data.semester,
+          skills: data.skills || [],
+          softSkills: data.softSkills || [],
+          achievements: data.achievements || [],
+          experiences: data.experiences || [],
+          aiSummary: data.aiSummary || "",
+          confidenceScore: data.confidenceScore || 96.8,
+          scannedAt: new Date().toLocaleString("id-ID"),
+          timestamp: Date.now(),
+          isFriendCv,
+        },
+      };
+
+      saveStoredProfile(updated);
+      setProfile(updated);
+      setIsSynced(true);
+    } catch (err: any) {
       console.error("API call error:", err);
+      setErrorMessage(err?.message || "Terjadi kesalahan saat memproses berkas PDF.");
+      setLogs((prev) => [
+        ...prev,
+        {
+          time: "00:02.0",
+          stage: "ERROR",
+          message: `[Gagal] ${err?.message || "Terjadi kesalahan pemrosesan berkas PDF."}`,
+          type: "warn",
+        },
+      ]);
     } finally {
       setIsProcessing(false);
     }
@@ -209,20 +329,45 @@ export default function CvUploadPage() {
     if (!parsedData) return;
     const current = getStoredProfile();
 
+    const candidateName = parsedData.name && parsedData.name !== "Tidak tertera di CV" ? parsedData.name : "Kandidat Terdeteksi";
+    const isOwnerCv = candidateName.toLowerCase().includes("haekal") || candidateName.toLowerCase().includes("praditya");
+    const isFriendCv = !isOwnerCv;
+
     const updated: StudentProfileData = {
       ...current,
-      name: parsedData.name || current.name,
-      nim: parsedData.nim || current.nim,
-      gpa: parsedData.gpa || current.gpa,
-      semester: parsedData.semester || current.semester,
-      sksCompleted: parsedData.sks || current.sksCompleted,
-      skills: Array.from(new Set([...current.skills, ...(parsedData.skills || [])])),
-      softSkills: Array.from(new Set([...current.softSkills, ...(parsedData.softSkills || [])])),
-      interests: Array.from(new Set([...current.interests, ...(parsedData.interests || [])])),
-      achievements: parsedData.achievements || current.achievements,
-      experiences: parsedData.experiences || current.experiences,
+      name: INITIAL_STUDENT_PROFILE.name,
+      ...(isOwnerCv ? {
+        gpa: parsedData.gpa != null ? parsedData.gpa : current.gpa,
+        semester: parsedData.semester != null ? parsedData.semester : current.semester,
+        sksCompleted: parsedData.sks != null ? parsedData.sks : current.sksCompleted,
+        department: parsedData.department && parsedData.department !== "Tidak tertera di CV" ? parsedData.department : current.department,
+        faculty: parsedData.faculty && parsedData.faculty !== "Tidak tertera di CV" ? parsedData.faculty : current.faculty,
+        skills: Array.from(new Set([...current.skills, ...(parsedData.skills || [])])),
+        softSkills: Array.from(new Set([...current.softSkills, ...(parsedData.softSkills || [])])),
+        interests: Array.from(new Set([...current.interests, ...(parsedData.interests || [])])),
+        achievements: parsedData.achievements && parsedData.achievements.length > 0 ? parsedData.achievements : current.achievements,
+        experiences: parsedData.experiences && parsedData.experiences.length > 0 ? parsedData.experiences : current.experiences,
+      } : {}),
       cvFileName: fileName,
       cvParsedAt: new Date().toLocaleString("id-ID"),
+      cvParsedTimestamp: Date.now(),
+      activeScannedCv: {
+        candidateName,
+        fileName: fileName,
+        department: parsedData.department,
+        faculty: parsedData.faculty,
+        gpa: parsedData.gpa,
+        semester: parsedData.semester,
+        skills: parsedData.skills || [],
+        softSkills: parsedData.softSkills || [],
+        achievements: parsedData.achievements || [],
+        experiences: parsedData.experiences || [],
+        aiSummary: parsedData.aiSummary || "",
+        confidenceScore: parsedData.confidenceScore || 96.8,
+        scannedAt: new Date().toLocaleString("id-ID"),
+        timestamp: Date.now(),
+        isFriendCv,
+      },
     };
 
     saveStoredProfile(updated);
@@ -238,7 +383,7 @@ export default function CvUploadPage() {
         onCollapsedChange={setCollapsed}
         user={{
           name: profile?.name || "Praditya Haekal Islami Al Haqiqi",
-          role: `${profile?.major || "S1 Teknik Elektro"} (Sem. ${profile?.semester || 5})`,
+          role: profile?.department || "Departemen Teknik Elektro",
           initials: "PH",
         }}
       />
@@ -274,7 +419,7 @@ export default function CvUploadPage() {
                   className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm"
                 >
                   <Cpu className="w-3.5 h-3.5 mr-1.5" />
-                  Uji CV: Haekal (IoT & Elektro)
+                  Sampel CV: Teknik Rekayasa & IoT
                 </Button>
                 <Button
                   onClick={() => startAIParsing("aisha")}
@@ -283,7 +428,7 @@ export default function CvUploadPage() {
                   className="bg-white/10 text-white hover:bg-white/20 border-white/20 text-xs font-semibold"
                 >
                   <Zap className="w-3.5 h-3.5 mr-1.5 text-yellow-400" />
-                  Uji CV: Aisha (FPGA & Robotik)
+                  Sampel CV: Sistem Tertanam & Robotika
                 </Button>
               </div>
             </div>
@@ -299,39 +444,62 @@ export default function CvUploadPage() {
                   Pilih Berkas CV Mahasiswa
                 </CardTitle>
                 <CardDescription className="text-xs text-slate-500">
-                  Mendukung format PDF, DOCX, atau teks langsung (Max 10MB)
+                  Format wajib PDF (.pdf) &bull; Ukuran berkas maksimum 100 MB
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Drag and Drop Zone */}
+                {/* Alert Error jika file bukan PDF atau > 100 MB */}
+                {errorMessage && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {/* Drag and Drop Zone Wajib PDF */}
                 <div
                   onClick={() => {
                     const input = document.getElementById("cv-file-input");
                     input?.click();
                   }}
-                  className="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer transition-colors bg-slate-50/50 hover:bg-blue-50/30 flex flex-col items-center justify-center space-y-2"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      handleFileSelection(e.dataTransfer.files[0]);
+                    }
+                  }}
+                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center space-y-2 ${
+                    file
+                      ? "border-blue-500 bg-blue-50/50"
+                      : "border-slate-300 hover:border-blue-500 bg-slate-50/50 hover:bg-blue-50/30"
+                  }`}
                 >
-                  <div className="p-3 bg-blue-100 rounded-full text-blue-600">
+                  <div className={`p-3 rounded-full ${file ? "bg-blue-600 text-white" : "bg-blue-100 text-blue-600"}`}>
                     <FileText className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-bold text-slate-800">
-                      {file ? file.name : "Klik atau seret file CV ke sini"}
+                      {file ? file.name : "Klik atau seret file PDF CV ke sini"}
                     </p>
-                    <p className="text-[11px] text-slate-400">
-                      Format: .PDF, .DOCX, atau teks
+                    <p className="text-[11px] text-slate-500">
+                      {file
+                        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB • Berkas PDF Siap Dianalisis`
+                        : "Format: PDF Asli (.pdf) • Maks. 100 MB"}
                     </p>
                   </div>
                   <input
                     id="cv-file-input"
                     type="file"
-                    accept=".pdf,.docx,.doc,.txt"
+                    accept=".pdf,application/pdf"
                     className="hidden"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
-                        const selected = e.target.files[0];
-                        setFile(selected);
-                        setFileName(selected.name);
+                        handleFileSelection(e.target.files[0]);
                       }
                     }}
                   />
@@ -345,7 +513,7 @@ export default function CvUploadPage() {
                   <Textarea
                     value={rawText}
                     onChange={(e) => setRawText(e.target.value)}
-                    placeholder="Tempel teks CV mahasiswa di sini untuk dianalisis oleh Gemini..."
+                    placeholder="Tempel teks isi CV mahasiswa di sini (opsional pendamping PDF)..."
                     rows={3}
                     className="text-xs bg-slate-50"
                   />
@@ -359,7 +527,7 @@ export default function CvUploadPage() {
                   {isProcessing ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      AI Sedang Memproses CV...
+                      AI Sedang Membaca & Menganalisis PDF...
                     </>
                   ) : (
                     <>
@@ -442,7 +610,7 @@ export default function CvUploadPage() {
                 {logs.length === 0 ? (
                   <div className="text-slate-500 text-center py-10 space-y-2">
                     <Cpu className="w-8 h-8 text-slate-700 mx-auto animate-pulse" />
-                    <p>Menunggu input berkas CV atau klik tombol &quot;Uji CV: Haekal&quot; di atas untuk memulai eksekusi AI langsung.</p>
+                    <p>Menunggu pengunggahan berkas CV (PDF) atau klik salah satu sampel CV di atas untuk memulai pemindaian AI secara langsung.</p>
                   </div>
                 ) : (
                   logs.map((log, idx) => (
@@ -473,50 +641,58 @@ export default function CvUploadPage() {
           {/* PARSED RESULT CARD (Appears when AI finishes) */}
           {parsedData && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <h2 className="text-base font-bold text-slate-900">
-                    Hasil Ekstraksi AI & Rekomendasi Profil
-                  </h2>
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <h2 className="text-base font-bold text-slate-900">
+                      Hasil Ekstraksi AI & Analisis CV
+                    </h2>
+                    {parsedData?.name && !parsedData.name.toLowerCase().includes("haekal") ? (
+                      <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs font-semibold">
+                        Uji Berkas Teman: {parsedData.name}
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs font-semibold">
+                        Berkas CV Pribadi
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Kandidat tertera di berkas: <strong className="text-slate-800 font-bold">{parsedData.name || "Kandidat Terdeteksi"}</strong> &bull; Profil akun utama Anda tetap: <strong className="text-blue-700 font-bold">Praditya Haekal Islami Al Haqiqi</strong>.
+                  </p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <Button
-                    onClick={handleSyncToProfile}
-                    className={`text-xs gap-1.5 font-bold shadow-sm ${
-                      isSynced
-                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                    }`}
-                  >
-                    {isSynced ? (
-                      <>
-                        <Check className="w-4 h-4" /> Tersinkron ke My Profile
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-4 h-4" /> Terapkan ke Profil Saya
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
                     onClick={() => router.push("/matches")}
-                    className="text-xs text-blue-700 border-blue-200 hover:bg-blue-50"
+                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs gap-1.5"
                   >
-                    Buka My Matches <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    Buka Hasil Pencocokan Peluang <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
                   </Button>
                 </div>
               </div>
 
-              {/* AI Qualitative Summary Box */}
-              <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-950 space-y-1 text-xs">
-                <div className="flex items-center gap-2 font-bold text-blue-900">
-                  <Sparkles className="w-4 h-4 text-blue-600" />
-                  Analisis Kualitatif AI (Confidence: {parsedData.confidenceScore || 96.8}%):
+              {/* AI Qualitative Summary Box (Rapi, Terstruktur & Elegan) */}
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/50 to-indigo-50/70 border border-blue-200/80 shadow-xs space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-100 pb-2.5">
+                  <div className="flex items-center gap-2 font-bold text-blue-900 text-xs md:text-sm">
+                    <span className="p-1 rounded-md bg-blue-600 text-white">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </span>
+                    Analisis Kualitatif AI (Confidence: {parsedData.confidenceScore || 96}%)
+                  </div>
+                  {engineMeta && (
+                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-blue-100/80 text-blue-800 font-semibold border border-blue-200/60">
+                      {engineMeta.engineUsed} &bull; {engineMeta.fileSizeFormatted || "PDF Terverifikasi"}
+                    </span>
+                  )}
                 </div>
-                <p className="leading-relaxed">{parsedData.aiSummary}</p>
+                <div className="text-xs md:text-[13px] leading-relaxed text-slate-700 space-y-2">
+                  <p className="font-normal text-slate-800 leading-relaxed whitespace-pre-line">
+                    {parsedData.aiSummary}
+                  </p>
+                </div>
               </div>
 
               {/* Extracted Details Grid */}
@@ -529,28 +705,48 @@ export default function CvUploadPage() {
                       Data Akademik Terdeteksi
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-xs text-slate-700">
-                    <div className="flex justify-between border-b border-slate-100 pb-1">
-                      <span className="text-slate-500">Nama:</span>
-                      <span className="font-bold">{parsedData.name}</span>
+                  <CardContent className="space-y-2.5 text-xs text-slate-700">
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">Kandidat di Berkas:</span>
+                      <span className="font-bold text-right text-slate-900">
+                        {parsedData.name && parsedData.name !== "Tidak tertera di CV" ? (
+                          parsedData.name
+                        ) : (
+                          <span className="text-slate-400 italic font-normal">Tidak tertera di CV</span>
+                        )}
+                      </span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-100 pb-1">
-                      <span className="text-slate-500">NIM:</span>
-                      <span className="font-mono font-semibold">{parsedData.nim}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-100 pb-1">
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
                       <span className="text-slate-500">Departemen:</span>
-                      <span className="font-semibold">{parsedData.department}</span>
+                      <span className="font-semibold text-right">
+                        {parsedData.department && parsedData.department !== "Tidak tertera di CV" ? (
+                          parsedData.department
+                        ) : (
+                          <span className="text-slate-400 italic font-normal">Tidak dicantumkan di CV</span>
+                        )}
+                      </span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-100 pb-1">
-                      <span className="text-slate-500">Fakultas:</span>
-                      <span className="font-semibold">{parsedData.faculty}</span>
+                    <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-slate-500">Semester:</span>
+                      <span className="font-semibold">
+                        {parsedData.semester ? (
+                          `Semester ${parsedData.semester} (${parsedData.sks || "-"} SKS)`
+                        ) : (
+                          <span className="text-slate-400 italic font-normal">Tidak dicantumkan di CV</span>
+                        )}
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center pt-1">
+                    <div className="flex justify-between items-center pt-0.5">
                       <span className="text-slate-500">IPK Terbaca:</span>
-                      <Badge className="bg-emerald-600 text-white font-black text-xs">
-                        {parsedData.gpa} / 4.00
-                      </Badge>
+                      {parsedData.gpa != null ? (
+                        <Badge className="bg-emerald-600 text-white font-bold text-xs">
+                          {parsedData.gpa.toFixed(2)} / 4.00
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-slate-500 border-slate-200 bg-slate-50 text-[11px] font-normal italic">
+                          Tidak dicantumkan di CV
+                        </Badge>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -565,16 +761,20 @@ export default function CvUploadPage() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex flex-wrap gap-1.5">
-                      {parsedData.skills?.map((sk: string) => (
-                        <span
-                          key={sk}
-                          className="text-[11px] px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 font-semibold"
-                        >
-                          {sk}
-                        </span>
-                      ))}
+                      {parsedData.skills && parsedData.skills.length > 0 ? (
+                        parsedData.skills.map((sk: string) => (
+                          <span
+                            key={sk}
+                            className="text-[11px] px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 font-semibold"
+                          >
+                            {sk}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-slate-400 text-xs italic">Tidak ada keahlian teknis khusus yang tertera di dokumen.</p>
+                      )}
                     </div>
-                    {parsedData.softSkills && (
+                    {parsedData.softSkills && parsedData.softSkills.length > 0 && (
                       <div className="pt-2 border-t border-slate-100">
                         <span className="text-[10px] text-slate-400 block mb-1">Soft Skills:</span>
                         <div className="flex flex-wrap gap-1">
@@ -592,27 +792,117 @@ export default function CvUploadPage() {
                   </CardContent>
                 </Card>
 
-                {/* 3. Experiences & Achievements */}
-                <Card className="border-slate-200 shadow-sm">
+                {/* 3. Experiences & Achievements (Poin-Poin Ringkas, Lengkap & Rapi) */}
+                <Card className="border-slate-200 shadow-sm flex flex-col">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      <Award className="w-4 h-4 text-amber-500" />
-                      Prestasi & Organisasi
+                    <CardTitle className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Award className="w-4 h-4 text-amber-500" />
+                        Prestasi & Pengalaman
+                      </span>
+                      <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                        {(parsedData.achievements?.length || 0)} Prestasi &bull; {(parsedData.experiences?.length || 0)} Pengalaman
+                      </span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-xs">
-                    {parsedData.experiences?.slice(0, 2).map((exp: any, i: number) => (
-                      <div key={i} className="p-2 rounded bg-slate-50 border border-slate-100">
-                        <p className="font-bold text-slate-800">{exp.title}</p>
-                        <p className="text-[11px] text-blue-600">{exp.organization}</p>
+                  <CardContent className="space-y-3 text-xs flex-1">
+                    {/* Bagian Prestasi Unggulan (Poin Inti Saja) */}
+                    {parsedData.achievements && parsedData.achievements.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">
+                          Prestasi / Penghargaan ({parsedData.achievements.length}):
+                        </span>
+                        <div className="space-y-1.5">
+                          {parsedData.achievements.map((ach: any, i: number) => {
+                            const cleanTitle = (ach.title || "")
+                              .replace(/[_\\]+/g, " ")
+                              .replace(/\s*(?:Developed|Selected\s+for|Awarded\s+for|For\s+proposing|In\s+recognition|Sebagai|Menciptakan)[\s\S]*/i, "")
+                              .replace(/^[•●\-*\s]+/, "")
+                              .trim();
+                            const displayTitle =
+                              cleanTitle.length > 60
+                                ? cleanTitle.substring(0, 58).replace(/\s+\S*$/, "") + "..."
+                                : cleanTitle || "Prestasi Mahasiswa";
+
+                            return (
+                              <div
+                                key={i}
+                                className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/70 flex items-start justify-between gap-1.5"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-amber-950 text-xs truncate">
+                                    {displayTitle}
+                                  </p>
+                                  <p className="text-[10px] text-amber-700 font-medium">
+                                    {ach.organizer || "Kompetisi"} &bull; {ach.level} ({ach.year || "2025"})
+                                  </p>
+                                </div>
+                                <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                                  {ach.year || "2025"}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    ))}
-                    {parsedData.achievements?.slice(0, 1).map((ach: any, i: number) => (
-                      <div key={i} className="p-2 rounded bg-amber-50/70 border border-amber-100">
-                        <p className="font-bold text-amber-900">{ach.title}</p>
-                        <p className="text-[10px] text-amber-700">Tingkat {ach.level} ({ach.year})</p>
+                    ) : null}
+
+                    {/* Bagian Riwayat Pengalaman & Organisasi (Experience Lengkap) */}
+                    {parsedData.experiences && parsedData.experiences.length > 0 ? (
+                      <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider block">
+                            Pengalaman & Organisasi ({parsedData.experiences.length}):
+                          </span>
+                          <span className="text-[9px] text-slate-400">
+                            Terurut dari CV
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1">
+                          {parsedData.experiences.map((exp: any, i: number) => {
+                            const cleanTitle = (exp.title || "")
+                              .replace(/^[•●\-*\s]+/, "")
+                              .trim();
+                            const displayTitle =
+                              cleanTitle.length > 55
+                                ? cleanTitle.substring(0, 52).replace(/\s+\S*$/, "") + "..."
+                                : cleanTitle || "Pengalaman Organisasi / Proyek";
+
+                            return (
+                              <div
+                                key={i}
+                                className="p-2 rounded-lg bg-blue-50/70 border border-blue-200/70 flex items-start justify-between gap-1.5 hover:bg-blue-50 transition-colors"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-slate-900 text-xs truncate">
+                                    {displayTitle}
+                                  </p>
+                                  <p className="text-[10px] text-blue-700 font-medium truncate">
+                                    {exp.organization || "Institut Teknologi Sepuluh Nopember"}
+                                  </p>
+                                  {exp.description && (
+                                    <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                                      {exp.description}
+                                    </p>
+                                  )}
+                                </div>
+                                {exp.duration && (
+                                  <span className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 whitespace-nowrap">
+                                    {exp.duration}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    ))}
+                    ) : (
+                      !parsedData.achievements?.length && (
+                        <p className="text-slate-400 text-xs italic">
+                          Tidak ada riwayat proyek atau prestasi yang tertera di dokumen.
+                        </p>
+                      )
+                    )}
                   </CardContent>
                 </Card>
               </div>

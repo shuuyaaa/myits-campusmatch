@@ -232,7 +232,7 @@ export default function ProfilePage() {
         onCollapsedChange={setCollapsed}
         user={{
           name: profile.name,
-          role: `${profile.major} (Sem. ${profile.semester})`,
+          role: profile.department || "Departemen Teknik Elektro",
           initials: "PH",
         }}
       />
@@ -259,7 +259,7 @@ export default function ProfilePage() {
                 </Badge>
               </div>
               <p className="text-xs md:text-sm text-slate-600 max-w-2xl">
-                Data akademik resmi (NIM, Jurusan, IPK, Semester, FRS) otomatis tersinkron dari <strong>myITS Satu Data</strong>. Keahlian teknis, soft skills, riwayat organisasi, prestasi, dan berkas dapat Anda sesuaikan langsung di halaman ini.
+                Data akademik resmi (Departemen, IPK, Semester, FRS) otomatis tersinkron dari <strong>myITS Satu Data</strong>. Keahlian teknis, soft skills, riwayat organisasi, prestasi, dan berkas dapat Anda sesuaikan langsung di halaman ini.
               </p>
             </div>
 
@@ -325,30 +325,16 @@ export default function ProfilePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 md:p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* NIM */}
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                    <span>NIM (Nomor Induk Mahasiswa)</span>
-                    <span className="text-[10px] text-emerald-600 font-bold">✓ Terverifikasi</span>
-                  </label>
-                  <Input
-                    value={profile.nim}
-                    onChange={(e) => handleInputChange("nim", e.target.value)}
-                    placeholder="07211940000001"
-                    className="text-xs bg-slate-50 font-mono font-semibold"
-                  />
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Nama Mahasiswa */}
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-700">
                     Nama Lengkap Mahasiswa
                   </label>
                   <Input
-                    value={profile.name}
+                    value={profile.name || "Praditya Haekal Islami Al Haqiqi"}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="M. Haekal Rizky Firmansyah"
+                    placeholder="Praditya Haekal Islami Al Haqiqi"
                     className="text-xs bg-slate-50 font-semibold"
                   />
                 </div>
@@ -394,25 +380,25 @@ export default function ProfilePage() {
                   </select>
                 </div>
 
-                {/* Departemen / Prodi */}
+                {/* Departemen */}
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-700">
-                    Departemen / Program Studi
+                    Departemen
                   </label>
                   <select
-                    value={profile.major}
+                    value={profile.department}
                     onChange={(e) => {
+                      handleInputChange("department", e.target.value);
                       handleInputChange("major", e.target.value);
-                      handleInputChange("department", e.target.value.replace("S1 ", ""));
                     }}
                     className="w-full text-xs p-2.5 rounded-lg border border-slate-200 bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
-                    <option value="S1 Teknik Elektro">S1 Teknik Elektro</option>
-                    <option value="S1 Teknik Komputer">S1 Teknik Komputer</option>
-                    <option value="S1 Teknik Informatika">S1 Teknik Informatika</option>
-                    <option value="S1 Sistem Informasi">S1 Sistem Informasi</option>
-                    <option value="S1 Teknik Biomedik">S1 Teknik Biomedik</option>
-                    <option value="S1 Teknologi Informasi">S1 Teknologi Informasi</option>
+                    <option value="Departemen Teknik Elektro">Departemen Teknik Elektro</option>
+                    <option value="Departemen Teknik Komputer">Departemen Teknik Komputer</option>
+                    <option value="Departemen Teknik Informatika">Departemen Teknik Informatika</option>
+                    <option value="Departemen Sistem Informasi">Departemen Sistem Informasi</option>
+                    <option value="Departemen Teknik Biomedik">Departemen Teknik Biomedik</option>
+                    <option value="Departemen Teknologi Informasi">Departemen Teknologi Informasi</option>
                   </select>
                 </div>
 
