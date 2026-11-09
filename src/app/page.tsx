@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,7 +62,7 @@ export default function DashboardPage() {
       case "COMMITTEE":
         return <Badge className="bg-rose-600 hover:bg-rose-700 text-white font-medium">Kepanitiaan</Badge>;
       case "ORGANIZATION":
-        return <Badge className="bg-blue-600 hover:bg-blue-700 text-white font-medium">Himpunan</Badge>;
+        return <Badge className="bg-[#013880] hover:bg-[#012d66] text-white font-medium">Himpunan</Badge>;
       case "RESEARCH":
         return <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium">Tim Riset</Badge>;
       case "LAB":
@@ -92,13 +93,13 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header Bar */}
         <Header
-          title="Dashboard"
+          title="Beranda Utama myITS"
           userName={profile?.name || "Praditya Haekal Islami Al Haqiqi"}
           showSearch={false}
         />
 
         {/* Konten Utama Dashboard */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-8 space-y-6">
           {/* Banner Selamat Datang - Kalimat Baku & Persuasif */}
           <div className="rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-sky-600 p-6 md:p-8 text-white shadow-lg">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
@@ -121,14 +122,14 @@ export default function DashboardPage() {
               <div className="flex flex-wrap md:flex-col gap-2.5 shrink-0">
                 <Button
                   onClick={() => router.push("/cv-upload")}
-                  className="bg-white text-blue-700 hover:bg-blue-50 font-bold shadow text-xs"
+                  className="bg-white text-[#013880] hover:bg-blue-50 font-bold shadow text-xs"
                 >
-                  <FileText className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
+                  <FileText className="w-3.5 h-3.5 mr-1.5 text-[#013880]" />
                   Upload & Scan CV
                 </Button>
                 <Button
                   onClick={() => router.push("/opportunities")}
-                  className="bg-blue-900/60 hover:bg-blue-900 text-white font-semibold border border-white/20 text-xs"
+                  className="bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/20 text-xs"
                 >
                   <Compass className="w-3.5 h-3.5 mr-1.5" />
                   Jelajah Peluang Kampus
@@ -140,11 +141,11 @@ export default function DashboardPage() {
           {/* 4 Kotak Rectangle Informasi Akademik Mahasiswa */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {/* Card 1: Departemen (Hanya Departemen, Prodi dihapus) */}
-            <Card className="border-slate-200 shadow-xs hover:border-blue-300 transition-colors">
+            <Card className="border-slate-200 shadow-xs hover:border-[#013880]/30 transition-colors">
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Departemen</p>
-                  <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                  <Building2 className="w-3.5 h-3.5 text-[#013880]" />
                 </div>
                 <p className="text-sm md:text-base font-bold text-slate-800 mt-1 truncate">
                   {profile?.department || "Departemen Teknik Elektro"}
@@ -154,7 +155,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Card 2: IPK myITS */}
-            <Card className="border-slate-200 shadow-xs hover:border-blue-300 transition-colors">
+            <Card className="border-slate-200 shadow-xs hover:border-[#013880]/30 transition-colors">
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">IPK myITS</p>
@@ -170,11 +171,11 @@ export default function DashboardPage() {
             </Card>
 
             {/* Card 3: Semester / SKS */}
-            <Card className="border-slate-200 shadow-xs hover:border-blue-300 transition-colors">
+            <Card className="border-slate-200 shadow-xs hover:border-[#013880]/30 transition-colors">
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Semester / SKS</p>
-                  <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />
+                  <GraduationCap className="w-3.5 h-3.5 text-[#013880]" />
                 </div>
                 <p className="text-sm md:text-base font-bold text-slate-800 mt-1">
                   Semester {profile?.semester || 5} ({profile?.sksCompleted || 96} SKS)
@@ -184,13 +185,13 @@ export default function DashboardPage() {
             </Card>
 
             {/* Card 4: Peluang Terbuka (Menggantikan peluang lolos kaku) */}
-            <Card className="border-slate-200 shadow-xs hover:border-blue-300 transition-colors cursor-pointer" onClick={() => router.push("/opportunities")}>
+            <Card className="border-slate-200 shadow-xs hover:border-[#013880]/30 transition-colors cursor-pointer" onClick={() => router.push("/opportunities")}>
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Peluang Terbuka</p>
-                  <Compass className="w-3.5 h-3.5 text-blue-600" />
+                  <Compass className="w-3.5 h-3.5 text-[#013880]" />
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-blue-600 mt-1">
+                <p className="text-xl md:text-2xl font-bold text-[#013880] mt-1">
                   {opportunities.length} Program
                 </p>
                 <span className="text-[11px] text-slate-500">Kepanitiaan, Lab, Riset, Hima</span>
@@ -259,7 +260,7 @@ export default function DashboardPage() {
                       <Button
                         size="sm"
                         onClick={() => setSelectedOpp(item)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold gap-1.5 justify-center shadow-xs"
+                        className="w-full bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white text-xs font-semibold gap-1.5 justify-center shadow-xs"
                       >
                         Baca Selengkapnya
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -273,10 +274,12 @@ export default function DashboardPage() {
         </main>
       </div>
 
+      <MobileNav />
+
       {/* Modal Detail Peluang */}
       {selectedOpp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-[92vw] sm:w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 {getCategoryBadge(selectedOpp.category)}
@@ -302,7 +305,7 @@ export default function DashboardPage() {
               <div className="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-blue-900 space-y-2">
                 <div>
                   <p className="font-bold flex items-center gap-1.5 text-blue-900">
-                    <CheckCircle2 className="w-4 h-4 text-blue-600" /> Formulir Pendaftaran Resmi
+                    <CheckCircle2 className="w-4 h-4 text-[#013880]" /> Formulir Pendaftaran Resmi
                   </p>
                   <p className="text-[11px] text-blue-700 mt-0.5">
                     Pendaftaran dan seleksi berkas dikelola langsung oleh pihak {selectedOpp.organization.name} melalui Google Form resmi.
@@ -313,7 +316,7 @@ export default function DashboardPage() {
                     window.open(selectedOpp.googleFormUrl, "_blank");
                     setSelectedOpp(null);
                   }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold gap-1.5 shadow-xs"
+                  className="w-full bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white text-xs font-semibold gap-1.5 shadow-xs"
                 >
                   Buka Form Pendaftaran (Google Form)
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -326,7 +329,7 @@ export default function DashboardPage() {
                 <p className="text-xs font-bold text-slate-800 mb-1.5">Divisi / Formasi yang Dibuka:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedOpp.divisions.map((d) => (
-                    <span key={d} className="px-2 py-1 rounded-md text-[11px] bg-blue-50 text-blue-700 font-medium">
+                    <span key={d} className="px-2 py-1 rounded-md text-[11px] bg-blue-50 text-[#013880] font-medium">
                       {d}
                     </span>
                   ))}
@@ -354,7 +357,7 @@ export default function DashboardPage() {
                 Tutup
               </Button>
               <Button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 font-semibold"
+                className="flex-1 bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white text-xs gap-1.5 font-semibold"
                 onClick={() => {
                   window.open(selectedOpp.googleFormUrl, "_blank");
                   setSelectedOpp(null);

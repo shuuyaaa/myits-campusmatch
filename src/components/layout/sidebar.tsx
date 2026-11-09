@@ -14,6 +14,9 @@ import {
   LogOut,
   ChevronLeft,
   GraduationCap,
+  Users,
+  BookOpen,
+  Building2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -37,19 +40,25 @@ interface NavItem {
 
 // Navigation sections
 const mainNavItems: NavItem[] = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Opportunities", href: "/opportunities", icon: Compass },
-  { title: "My Matches", href: "/matches", icon: Target },
-  { title: "Gap Analysis", href: "/gap-analysis", icon: TrendingUp },
+  { title: "Beranda Utama", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Katalog Peluang", href: "/opportunities", icon: Compass },
+  { title: "Rekomendasi Peluang", href: "/matches", icon: Target },
+  { title: "Analisis Kualifikasi", href: "/gap-analysis", icon: TrendingUp },
+];
+
+const campusLearningNavItems: NavItem[] = [
+  { title: "Rekan Belajar", href: "/study-partners", icon: Users },
+  { title: "Materi & Bank Soal", href: "/learning-materials", icon: BookOpen },
+  { title: "Reservasi CCWS & Fasilitas", href: "/facility-booking", icon: Building2 },
 ];
 
 const profileNavItems: NavItem[] = [
-  { title: "My Profile", href: "/profile", icon: User },
-  { title: "CV Upload", href: "/cv-upload", icon: FileText },
+  { title: "Profil Mahasiswa", href: "/profile", icon: User },
+  { title: "Unggah & Analisis CV", href: "/cv-upload", icon: FileText },
 ];
 
 const organizerNavItems: NavItem[] = [
-  { title: "Bagikan Info Peluang", href: "/admin/opportunities", icon: Send },
+  { title: "Publikasi Peluang Baru", href: "/admin/opportunities", icon: Send },
 ];
 
 // User info type
@@ -84,14 +93,14 @@ function NavLink({
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent",
+        "flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium transition-all",
         isActive
-          ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground font-semibold"
-          : "text-muted-foreground hover:text-foreground",
+          ? "bg-[#013880]/10 text-[#013880] font-bold dark:bg-blue-900/30 dark:text-blue-300"
+          : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800",
         collapsed && "justify-center px-2"
       )}
     >
-      <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-primary dark:text-blue-400")} />
+      <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", isActive ? "text-[#013880] dark:text-blue-400" : "text-slate-500")} />
       {!collapsed && <span>{item.title}</span>}
     </Link>
   );
@@ -140,7 +149,7 @@ export function Sidebar({
     <TooltipProvider>
       <aside
         className={cn(
-          "sticky top-0 z-40 flex h-screen shrink-0 flex-col border-r border-slate-200 bg-white dark:bg-slate-900 transition-all duration-300",
+          "sticky top-0 z-40 hidden md:flex h-screen shrink-0 flex-col border-r border-slate-200 bg-white dark:bg-slate-900 transition-all duration-300",
           collapsed ? "w-[68px]" : "w-[260px]",
           className
         )}
@@ -148,19 +157,19 @@ export function Sidebar({
         {/* Logo / Brand */}
         <div
           className={cn(
-            "flex h-16 items-center border-b px-4",
+            "flex h-16 items-center border-b border-slate-100 px-4",
             collapsed ? "justify-center" : "gap-3"
           )}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#013880] to-[#0D47A1] text-white shadow-xs">
             <GraduationCap className="h-5 w-5" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-bold leading-tight tracking-tight">
+              <span className="text-sm font-extrabold leading-tight tracking-tight text-slate-900">
                 myITS
               </span>
-              <span className="text-xs font-medium leading-tight text-primary dark:text-blue-400">
+              <span className="text-[11px] font-bold leading-tight text-[#013880]">
                 CampusMatch
               </span>
             </div>
@@ -207,9 +216,22 @@ export function Sidebar({
               ))}
             </div>
 
+            {/* Smarter Campus & Learning section */}
+            <div className="flex flex-col gap-1">
+              <SectionLabel label="Pilar Smarter Campus" collapsed={collapsed} />
+              {campusLearningNavItems.map((item) => (
+                <NavLink
+                  key={item.href}
+                  item={item}
+                  isActive={pathname === item.href}
+                  collapsed={collapsed}
+                />
+              ))}
+            </div>
+
             {/* Profile section */}
             <div className="flex flex-col gap-1">
-              <SectionLabel label="Profil & Berkas" collapsed={collapsed} />
+              <SectionLabel label="Profil & Portofolio" collapsed={collapsed} />
               {profileNavItems.map((item) => (
                 <NavLink
                   key={item.href}
@@ -245,7 +267,7 @@ export function Sidebar({
           >
             <Avatar className="h-8 w-8 shrink-0 border border-blue-200">
               <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback className="bg-blue-600 text-xs font-bold text-white">
+              <AvatarFallback className="bg-gradient-to-br from-[#013880] to-[#0D47A1] text-xs font-bold text-white">
                 {user.initials || "PH"}
               </AvatarFallback>
             </Avatar>

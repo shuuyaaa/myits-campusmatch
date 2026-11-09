@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -104,11 +105,11 @@ function GapAnalysisContent() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header
-          title="Analisis Kesenjangan Kualifikasi (Gap Analysis)"
+          title="Analisis Kualifikasi (Gap Analysis)"
           userName={profile?.name || "Praditya Haekal Islami Al Haqiqi"}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-8 space-y-6">
           {/* Top Selector Banner */}
           <div className="bg-white rounded-2xl p-5 md:p-6 border border-slate-200 shadow-sm space-y-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -355,6 +356,8 @@ function GapAnalysisContent() {
           </div>
         </main>
       </div>
+
+      <MobileNav />
     </div>
   );
 }

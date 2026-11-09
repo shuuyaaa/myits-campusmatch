@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -165,14 +166,14 @@ function MatchesContent() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header
-          title="Hasil Pencocokan CV (My Matches)"
+          title="Rekomendasi Peluang Sesuai CV"
           userName={profile?.name || "Praditya Haekal Islami Al Haqiqi"}
           searchQuery={searchQuery}
           onSearch={setSearchQuery}
           searchPlaceholder="Cari hasil pencocokan berdasarkan program atau skill..."
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-8 space-y-6">
           {/* Header Banner: Driven by CV Upload */}
           <div className="bg-gradient-to-r from-indigo-900 via-blue-900 to-slate-900 rounded-2xl p-6 text-white shadow-md">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -408,10 +409,12 @@ function MatchesContent() {
         </main>
       </div>
 
+      <MobileNav />
+
       {/* Detail Opportunity Modal */}
       {selectedOpp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-xl w-[92vw] sm:w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs text-blue-600 font-semibold">{selectedOpp.organization.name}</p>
@@ -515,7 +518,7 @@ function MatchesContent() {
                 Tutup
               </Button>
               <Button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 font-semibold"
+                className="flex-1 bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white text-xs gap-1.5 font-semibold"
                 onClick={() => {
                   window.open(selectedOpp.googleFormUrl, "_blank");
                   setSelectedOpp(null);

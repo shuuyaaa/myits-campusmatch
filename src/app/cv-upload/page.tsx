@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../../components/layout/sidebar";
 import { Header } from "../../components/layout/header";
+import { MobileNav } from "../../components/layout/mobile-nav";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -390,11 +391,11 @@ export default function CvUploadPage() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header
-          title="Upload & Analisis CV Berbasis AI (Live Scanner)"
+          title="Unggah & Analisis CV Berbasis AI"
           userName={profile?.name || "Praditya Haekal Islami Al Haqiqi"}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-8 space-y-6">
           {/* Top Banner */}
           <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 rounded-2xl p-6 text-white shadow-lg">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -910,6 +911,8 @@ export default function CvUploadPage() {
           )}
         </main>
       </div>
+
+      <MobileNav />
     </div>
   );
 }

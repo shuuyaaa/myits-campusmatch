@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,7 @@ function OpportunitiesContent() {
       case "COMMITTEE":
         return <Badge className="bg-rose-600 hover:bg-rose-700 text-white font-medium">Kepanitiaan</Badge>;
       case "ORGANIZATION":
-        return <Badge className="bg-blue-600 hover:bg-blue-700 text-white font-medium">Himpunan</Badge>;
+        return <Badge className="bg-[#013880] hover:bg-[#012d66] text-white font-medium">Himpunan</Badge>;
       case "RESEARCH":
         return <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium">Tim Riset</Badge>;
       case "LAB":
@@ -132,14 +133,14 @@ function OpportunitiesContent() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header
-          title="Opportunities"
+          title="Katalog Peluang Kampus ITS"
           userName={profile?.name || "Praditya Haekal Islami Al Haqiqi"}
           searchQuery={searchQuery}
           onSearch={setSearchQuery}
           searchPlaceholder="Cari kepanitiaan, tim riset, himpunan, laboratorium, kompetisi, beasiswa..."
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-8 space-y-6">
           {/* Top Title Banner - Deskripsi General Tanpa Sebut Merek Event */}
           <div className="bg-white rounded-2xl p-5 md:p-6 border border-slate-200 shadow-xs">
             <div className="flex items-center gap-2 mb-1">
@@ -210,7 +211,7 @@ function OpportunitiesContent() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-3 py-1.5 rounded-full font-medium transition-colors shrink-0 ${
                     selectedCategory === cat.id
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-[#013880] text-white shadow-xs font-semibold"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
@@ -290,7 +291,7 @@ function OpportunitiesContent() {
                         <Button
                           size="sm"
                           onClick={() => setSelectedOpp(opp)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold gap-1.5 justify-center shadow-xs"
+                          className="w-full bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white text-xs font-semibold gap-1.5 justify-center shadow-xs"
                         >
                           Baca Selengkapnya
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -305,10 +306,12 @@ function OpportunitiesContent() {
         </main>
       </div>
 
+      <MobileNav />
+
       {/* Modal Detail Peluang */}
       {selectedOpp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-[92vw] sm:w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 shadow-2xl space-y-4">
             <div className="flex justify-between items-start">
               <div>
                 {getCategoryBadge(selectedOpp.category)}
@@ -334,7 +337,7 @@ function OpportunitiesContent() {
               <div className="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 text-xs text-blue-900 space-y-2">
                 <div>
                   <p className="font-bold flex items-center gap-1.5 text-blue-900">
-                    <CheckCircle2 className="w-4 h-4 text-blue-600" /> Formulir Pendaftaran Resmi
+                    <CheckCircle2 className="w-4 h-4 text-[#013880]" /> Formulir Pendaftaran Resmi
                   </p>
                   <p className="text-[11px] text-blue-700 mt-0.5">
                     Pendaftaran dan seleksi berkas dikelola langsung oleh pihak {selectedOpp.organization.name} via Google Form.
@@ -345,7 +348,7 @@ function OpportunitiesContent() {
                     window.open(selectedOpp.googleFormUrl, "_blank");
                     setSelectedOpp(null);
                   }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold gap-1.5 shadow-xs"
+                  className="w-full bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white text-xs font-semibold gap-1.5 shadow-xs"
                 >
                   Buka Form Pendaftaran (Google Form)
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -397,7 +400,7 @@ function OpportunitiesContent() {
 
             <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200 text-xs text-blue-800 space-y-1">
               <p className="font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" /> Tautan Pendaftaran Resmi Google Form
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#013880]" /> Tautan Pendaftaran Resmi Google Form
               </p>
               <p className="text-[11px] text-blue-700 leading-relaxed">
                 Pendaftaran dan seleksi berkas dikelola langsung oleh {selectedOpp.organization.name} via formulir Google Form resmi berikut.
@@ -413,7 +416,7 @@ function OpportunitiesContent() {
                 Tutup
               </Button>
               <Button
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 font-semibold"
+                className="flex-1 bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white text-xs gap-1.5 font-semibold"
                 onClick={() => {
                   window.open(selectedOpp.googleFormUrl, "_blank");
                   setSelectedOpp(null);
