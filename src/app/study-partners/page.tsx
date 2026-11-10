@@ -33,12 +33,14 @@ import {
   Cpu,
   Layers,
   Filter,
+  Mail,
 } from "lucide-react";
 import { getStoredProfile } from "../../lib/data-store";
 
 interface StudyPartnerPost {
   id: string;
   name: string;
+  email: string;
   department: string;
   faculty: string;
   semester: number;
@@ -59,6 +61,7 @@ const INITIAL_POSTS: StudyPartnerPost[] = [
   {
     id: "sp-1",
     name: "Bayu Pratama Putra",
+    email: "bayu.5009221042@student.its.ac.id",
     department: "Departemen Teknik Elektro",
     faculty: "FTEIC",
     semester: 5,
@@ -77,6 +80,7 @@ const INITIAL_POSTS: StudyPartnerPost[] = [
   {
     id: "sp-2",
     name: "Nadia Safira Putri",
+    email: "nadia.5009231018@student.its.ac.id",
     department: "Departemen Teknik Elektro",
     faculty: "FTEIC",
     semester: 3,
@@ -95,6 +99,7 @@ const INITIAL_POSTS: StudyPartnerPost[] = [
   {
     id: "sp-3",
     name: "Reyhan Ardiansyah",
+    email: "reyhan.5025221091@student.its.ac.id",
     department: "Departemen Teknik Informatika",
     faculty: "FTEIC",
     semester: 5,
@@ -113,6 +118,7 @@ const INITIAL_POSTS: StudyPartnerPost[] = [
   {
     id: "sp-4",
     name: "Dimas Cahyo Wicaksono",
+    email: "dimas.5009211077@student.its.ac.id",
     department: "Departemen Teknik Elektro",
     faculty: "FTEIC",
     semester: 7,
@@ -131,6 +137,7 @@ const INITIAL_POSTS: StudyPartnerPost[] = [
   {
     id: "sp-5",
     name: "Annisa Larasati",
+    email: "annisa.5026221034@student.its.ac.id",
     department: "Departemen Sistem Informasi",
     faculty: "FTEIC",
     semester: 5,
@@ -148,7 +155,46 @@ const INITIAL_POSTS: StudyPartnerPost[] = [
   },
   {
     id: "sp-6",
+    name: "Bagas Surya Dharma",
+    email: "bagas.5007221055@student.its.ac.id",
+    department: "Departemen Teknik Mesin",
+    faculty: "FTIRS",
+    semester: 5,
+    avatarInitials: "BS",
+    category: "COMPETITION",
+    topic: "Desain Mekanik CAD & Drone Otonom (PKM-KC)",
+    target: "Tim Lomba PKM Karsa Cipta 2026",
+    preferredTime: "Rabu & Jumat Sore (15.30 - 18.00 WIB)",
+    preferredLocation: "CCWS Menara Sains / SCC",
+    statusText: "🟢 Mencari Anak Elektro / IF",
+    skills: ["SolidWorks", "CAD", "Aerodynamics", "3D Printing", "Prototyping"],
+    description: "Tim PKM-KC sudah siap di bagian rangka mekanik dan manufaktur drone inspeksi. Butuh rekan dari Teknik Elektro / Informatika untuk sistem kendali flight controller & computer vision.",
+    slotsRemaining: 2,
+    verified: true,
+  },
+  {
+    id: "sp-7",
+    name: "Clara Wijaya",
+    email: "clara.5003231012@student.its.ac.id",
+    department: "Departemen Statistika",
+    faculty: "FSAD",
+    semester: 3,
+    avatarInitials: "CW",
+    category: "TUTOR",
+    topic: "Probabilitas, Statistika & Data Modeling",
+    target: "Kelompok Belajar ETS & Lomba Data Science",
+    preferredTime: "Selasa & Kamis Malam",
+    preferredLocation: "CCWS Gedung Perpustakaan Pusat Lantai 2",
+    statusText: "🟢 Open Diskusi & Riset Data",
+    skills: ["R", "Python", "Data Analytics", "Time Series", "Probabilitas"],
+    description: "Terbuka untuk belajar bareng atau kolaborasi tim lomba Data Science / PKM lintas jurusan se-ITS yang membutuhkan pemodelan statistik & validasi data.",
+    slotsRemaining: 2,
+    verified: true,
+  },
+  {
+    id: "sp-8",
     name: "Praditya Haekal Islami Al Haqiqi",
+    email: "praditya.5009221000@student.its.ac.id",
     department: "Departemen Teknik Elektro",
     faculty: "FTEIC",
     semester: 5,
@@ -173,11 +219,12 @@ export default function StudyPartnersPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
-  const [selectedDept, setSelectedDept] = useState<string>("Departemen Teknik Elektro");
+  const [selectedDept, setSelectedDept] = useState<string>("ALL");
 
   // Modal State for "Buat Ajakan Belajar"
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [formTopic, setFormTopic] = useState("");
+  const [formEmail, setFormEmail] = useState("praditya.5009221000@student.its.ac.id");
   const [formCategory, setFormCategory] = useState<StudyPartnerPost["category"]>("COMPETITION");
   const [formTarget, setFormTarget] = useState("");
   const [formLocation, setFormLocation] = useState("CCWS Gedung Perpustakaan Pusat Lantai 2");
@@ -190,6 +237,7 @@ export default function StudyPartnersPage() {
   const [connectModalPost, setConnectModalPost] = useState<StudyPartnerPost | null>(null);
   const [connectTopicType, setConnectTopicType] = useState("Proyek Lomba");
   const [connectCustomTopic, setConnectCustomTopic] = useState("Diskusi Tim Hackathon STACK 2026");
+  const [connectSenderEmail, setConnectSenderEmail] = useState("praditya.5009221000@student.its.ac.id");
   const [connectMessage, setConnectMessage] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -197,16 +245,17 @@ export default function StudyPartnersPage() {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 4000);
+    }, 4500);
   };
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTopic.trim() || !formDescription.trim()) return;
+    if (!formTopic.trim() || !formDescription.trim() || !formEmail.trim()) return;
 
     const newPost: StudyPartnerPost = {
       id: `sp-${Date.now()}`,
       name: "Praditya Haekal Islami Al Haqiqi",
+      email: formEmail.trim(),
       department: "Departemen Teknik Elektro",
       faculty: "FTEIC",
       semester: 5,
@@ -233,16 +282,17 @@ export default function StudyPartnersPage() {
     setFormSkills("");
     setFormTarget("");
     setFormTime("");
-    showToast("Ajakan belajar baru berhasil dipublikasikan ke myITS StudyMatch!");
+    showToast(`Ajakan belajar dipublikasikan! Notifikasi balasan akan masuk ke ${newPost.email}.`);
   };
 
   const handleConnectSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!connectModalPost) return;
 
+    const targetEmail = connectModalPost.email;
     setConnectModalPost(null);
     setConnectMessage("");
-    showToast("Undangan kolaborasi berhasil dikirim melalui sistem pesan myITS!");
+    showToast(`Undangan kolaborasi berhasil dikirim langsung ke email ${targetEmail}!`);
   };
 
   // Filtered posts
@@ -361,11 +411,13 @@ export default function StudyPartnersPage() {
                   onChange={(e) => setSelectedDept(e.target.value)}
                   className="w-full text-xs font-semibold border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#013880]"
                 >
-                  <option value="Departemen Teknik Elektro">Departemen Teknik Elektro (Default)</option>
-                  <option value="Departemen Teknik Informatika">Teknik Informatika</option>
-                  <option value="Departemen Sistem Informasi">Sistem Informasi</option>
+                  <option value="ALL">Semua Departemen se-ITS (Default)</option>
+                  <option value="Departemen Teknik Elektro">Departemen Teknik Elektro (FTEIC)</option>
+                  <option value="Departemen Teknik Informatika">Departemen Teknik Informatika (FTEIC)</option>
+                  <option value="Departemen Sistem Informasi">Departemen Sistem Informasi (FTEIC)</option>
                   <option value="Semua Departemen FTEIC">Semua Departemen FTEIC</option>
-                  <option value="ALL">Semua Departemen ITS</option>
+                  <option value="Departemen Teknik Mesin">Departemen Teknik Mesin (FTIRS)</option>
+                  <option value="Departemen Statistika">Departemen Statistika (FSAD)</option>
                 </select>
               </div>
             </div>
@@ -511,6 +563,10 @@ export default function StudyPartnersPage() {
                           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span className="truncate">{post.preferredLocation}</span>
                         </div>
+                        <div className="flex items-center gap-1.5 truncate text-[#013880] font-medium">
+                          <Mail className="w-3.5 h-3.5 text-[#013880] shrink-0" />
+                          <span className="truncate">{post.email}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -524,7 +580,7 @@ export default function StudyPartnersPage() {
                         className="w-full bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white font-semibold text-xs gap-1.5 rounded-lg py-2 shadow-xs"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
-                        Ajak Diskusi / Connect
+                        Ajak Diskusi / Kirim Email
                       </Button>
                     </div>
                   </CardContent>
@@ -546,26 +602,45 @@ export default function StudyPartnersPage() {
               Buat Ajakan Belajar & Kolaborasi Baru
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Formulir posting kebutuhan belajar, tim lomba, atau riset laboratorium mahasiswa ITS.
+              Formulir posting kebutuhan belajar, tim lomba (PKM/Hackathon), atau riset laboratorium se-ITS.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleCreateSubmit} className="space-y-3.5 py-1 text-xs">
-            <div>
-              <label className="font-semibold text-slate-700 block mb-1">
-                Kategori Kolaborasi *
-              </label>
-              <select
-                value={formCategory}
-                onChange={(e) => setFormCategory(e.target.value as any)}
-                className="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#013880]"
-              >
-                <option value="COMPETITION">Rekan Lomba / Hackathon</option>
-                <option value="TUTOR">Tutor Sebaya (Peer Tutor)</option>
-                <option value="RESEARCH">Rekan Riset & Proyek</option>
-                <option value="STUDY_GROUP">Kelompok Belajar Kuliah</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">
+                  Kategori Kolaborasi *
+                </label>
+                <select
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value as any)}
+                  className="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#013880]"
+                >
+                  <option value="COMPETITION">Rekan Lomba / PKM / Hackathon</option>
+                  <option value="TUTOR">Tutor Sebaya (Peer Tutor)</option>
+                  <option value="RESEARCH">Rekan Riset & Proyek</option>
+                  <option value="STUDY_GROUP">Kelompok Belajar Kuliah</option>
+                </select>
+              </div>
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">
+                  Email Penerima Notifikasi Undangan *
+                </label>
+                <Input
+                  type="email"
+                  placeholder="nama@student.its.ac.id"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  required
+                  className="text-xs"
+                />
+              </div>
             </div>
+            <p className="text-[11px] text-[#013880] bg-blue-50/70 px-2.5 py-1.5 rounded-lg border border-blue-100 flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 shrink-0" />
+              Notifikasi otomatis dikirim ke email ini saat ada mahasiswa ITS yang mengajak diskusi.
+            </p>
 
             <div>
               <label className="font-semibold text-slate-700 block mb-1">
@@ -584,7 +659,7 @@ export default function StudyPartnersPage() {
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">Target Kompetisi / Tujuan *</label>
                 <Input
-                  placeholder="Contoh: Hackathon STACK 2026 atau ETS"
+                  placeholder="Contoh: Hackathon STACK 2026 atau PKM-KC"
                   value={formTarget}
                   onChange={(e) => setFormTarget(e.target.value)}
                   required
@@ -679,13 +754,13 @@ export default function StudyPartnersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* MODAL 2: Ajak Diskusi / Connect */}
+      {/* MODAL 2: Ajak Diskusi / Connect via Email Langsung */}
       <Dialog open={!!connectModalPost} onOpenChange={(open) => !open && setConnectModalPost(null)}>
         <DialogContent className="max-w-md w-[92vw] sm:w-full max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-[#013880]" />
-              Ajak Diskusi / Connect
+              <Mail className="w-5 h-5 text-[#013880]" />
+              Kirim Undangan Diskusi ke Email
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
               Kirim undangan kolaborasi belajar kepada{" "}
@@ -696,6 +771,16 @@ export default function StudyPartnersPage() {
 
           {connectModalPost && (
             <form onSubmit={handleConnectSubmit} className="space-y-3.5 py-1 text-xs">
+              <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200 text-[11px] text-[#013880] space-y-1">
+                <p className="font-bold flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 shrink-0" />
+                  Dikirim Langsung ke Email Pembuat Ajakan:
+                </p>
+                <p className="font-mono font-bold text-slate-900 bg-white px-2 py-1 rounded border border-blue-100">
+                  {connectModalPost.email}
+                </p>
+              </div>
+
               <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[11px] text-slate-600 space-y-1">
                 <p>
                   <strong>Fokus:</strong> {connectModalPost.topic}
@@ -703,6 +788,20 @@ export default function StudyPartnersPage() {
                 <p>
                   <strong>Target:</strong> {connectModalPost.target}
                 </p>
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">
+                  Email Balasan Anda *
+                </label>
+                <Input
+                  type="email"
+                  required
+                  value={connectSenderEmail}
+                  onChange={(e) => setConnectSenderEmail(e.target.value)}
+                  placeholder="email.anda@student.its.ac.id"
+                  className="text-xs"
+                />
               </div>
 
               {/* Pilihan topik ajakan (Ujian Bareng / Proyek Lomba / Bimbingan) */}
@@ -715,7 +814,7 @@ export default function StudyPartnersPage() {
                   onChange={(e) => setConnectTopicType(e.target.value)}
                   className="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-[#013880]"
                 >
-                  <option value="Proyek Lomba">Proyek Lomba (STACK 2026 / Gemastik)</option>
+                  <option value="Proyek Lomba">Proyek Lomba (PKM / STACK 2026 / Gemastik)</option>
                   <option value="Ujian Bareng">Ujian Bareng (Persiapan ETS / EAS)</option>
                   <option value="Bimbingan">Bimbingan / Tutor Sebaya</option>
                   <option value="Riset Proyek">Riset & Kolaborasi Proyek</option>
@@ -753,7 +852,7 @@ export default function StudyPartnersPage() {
                   className="bg-gradient-to-r from-[#013880] to-[#0D47A1] hover:from-[#012d66] hover:to-[#09357a] text-white text-xs font-semibold gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  Kirim Undangan
+                  Kirim ke Email Tujuan
                 </Button>
               </DialogFooter>
             </form>
